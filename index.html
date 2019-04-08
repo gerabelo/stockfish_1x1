@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/chessboard-0.3.0.min.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="js/chess.min.js"></script>
+    <script src="js/stockfish.js"></script>
+    <script src="js/chessboard-0.3.0.min.js"></script>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col-md-10">
+        &nbsp;
+      </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-1">
+            &nbsp;
+          </div>
+      <div class="col-md-9">
+          <b>SCOREBOARD: </b>
+      </div>      
+    </div>
+
+    <div class="row">
+      <div class="col-md-1">
+        &nbsp;
+      </div>
+      <div class="col-md-1">
+          <div id="whiteCount">white: 0</div>
+      </div>
+      <div class="col-md-1">
+          <div id="blackCount">black: 0</div>
+      </div>
+      <div class="col-md-1">
+          <div id="blackCount">draw: 0</div>
+      </div>
+      <div class="col-md-1">
+          <div id="stalemate">stalemate: 0</div>
+      </div>
+      <div class="col-md-5">
+          &nbsp;
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-10">
+        <b>&nbsp;</b>
+      </div>      
+    </div>
+  
+    <div class="row">
+      <div class="col-md-1">
+        &nbsp;
+      </div>
+      <div class="col-md-4">
+        <span class="h3" id="time1">0:05:00</span>
+        <div id="board" style="width: 400px"></div>
+        <span class="h3" id="time2">0:05:00</span>
+        <hr>
+        <div id="engine1Status">...</div>
+        <div id="engine2Status">...</div>
+      </div>
+      <div class="col-md-4">
+        <h3>PGN:</h3>
+        <div id="pgn"></div>
+        <h3>FEN:</h3>
+        <div id="fen"></div>
+        <div id="bestmove"></div>
+        <hr>
+        <form class="form-horizontal">
+            <h3>Time setings:</h3>
+          <div class="form-group">
+            <label for="timeBase" class="control-label col-xs-4 col-sm-6 col-md-4">Base time (min)</label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <input type="number" class="form-control" id="timeBase" value="60"></input>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="timeInc" class="control-label col-xs-4 col-sm-6 col-md-4">Increment (sec)</label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <input type="number" class="form-control" id="timeInc" value="2"></input>
+            </div>
+          </div>
+          <h3>Engine [1]:</h3>
+          <div class="form-group">
+            <label for="skillLevel1" class="control-label col-xs-4 col-sm-6 col-md-4">Skill Level (0-20)</label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <input type="number" class="form-control" id="skillLevel1" value="20"></input>
+            </div>
+          </div>
+          <div class="form-group">
+              <label for="depthLevel1" class="control-label col-xs-4 col-sm-6 col-md-4">Depth Level (0-20)</label>
+              <div class="col-xs-4 col-sm-6 col-md-4">
+                <input type="number" class="form-control" id="depthLevel1" value="15" disabled="true"></input>
+              </div>
+          </div>
+          <h3>Engine [2]:</h3>
+          <div class="form-group">
+            <label for="skillLevel2" class="control-label col-xs-4 col-sm-6 col-md-4">Skill Level (0-20)</label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <input type="number" class="form-control" id="skillLevel2" value="7"></input>
+            </div>
+          </div>
+          <div class="form-group">
+              <label for="depthLevel2" class="control-label col-xs-4 col-sm-6 col-md-4">Depth Level (0-20)</label>
+              <div class="col-xs-4 col-sm-6 col-md-4">
+                <input type="number" class="form-control" id="depthLevel2" value="5" disabled="true"></input>
+              </div>
+            </div>
+          <div class="form-group">
+            <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4">Recording</label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-primary active" id="color-white"><input type="radio" name="color">White</label>
+                <label class="btn btn-primary" id="color-black"><input type="radio" name="color">Black</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="showScore" class="control-label col-xs-4 col-sm-6 col-md-4">Show score</label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <input type="checkbox" class="form-control" id="showScore" checked></input>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4"></label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <button type="button" class="btn btn-primary" onclick="newGame()">New Game</button>
+            </div>
+          </div>
+        </form>
+        <!-- <h5>Compatibility</h5>
+        <small>This chess engine has been tested and found working in both Firefox 25 and Chrome 31. It runs about twice as fast in Firefox as in Chrome, so for best performance use Firefox. The engine has also been tested in Safari 6 where it does not run. It might run in a later version of this browser, though. It has not been tested in the Internet Explorer, but it should in theory run in IE versions >= 10.</small> -->
+      </div>
+      <div class="col-md-1">
+          &nbsp;
+      </div>
+    </div>
+    <script src="enginegame.js"></script>
+    <script>
+      var game = engineGame({book: 'book.bin'});
+
+      function newGame() {
+        var baseTime = parseFloat($('#timeBase').val()) * 60;
+        var inc = parseFloat($('#timeInc').val());
+        var skill1 = parseInt($('#skillLevel1').val());
+        var skill2 = parseInt($('#skillLevel2').val());
+        var depthLevel1 = parseInt($('#depthLevel1').val());
+        var depthLevel2 = parseInt($('#depthLevel2').val());
+
+        game.reset();
+        game.setTime(baseTime, inc);
+        game.setSkillLevel1(skill1);
+        game.setSkillLevel2(skill2);
+        game.setDepth1(depthLevel1);
+        game.setDepth2(depthLevel2);
+        game.setPlayerColor($('#color-white').hasClass('active') ? 'white' : 'black');
+        game.setDisplayScore($('#showScore').is(':checked'));
+        game.start();
+      }
+
+      newGame();
+    </script>
+  </body>
+</html>
