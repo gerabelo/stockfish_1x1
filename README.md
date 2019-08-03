@@ -9,6 +9,11 @@
   
   
 ### **Como usar**  
+Instale o NodeJS, o MongoDB e em seguida povoe a base de dados _chess_:
+* mongoimport --db chess --collection mateinns <_path to mateinns.json_>/mateinns.json  
+* mongoimport --db chess --collection mateinns <_path to bestmoves.json_>/bestmoves.json  
+* mongoimport --db chess --collection mateinns <_path to pgns.json_>/pgns.json  
+
 * _node permanencia.js_  
 * _node server.js_  
 * _localhost:8080_
