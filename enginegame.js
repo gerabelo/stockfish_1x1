@@ -1,7 +1,14 @@
+/*
+        Blunder: 300 centipawns
+        Mistake: 100 centipawns
+        Inaccuracy: 50 centipawns
+*/
+
 function engineGame(options) {
     options = options || {}
     var game = new Chess();
     var board;
+    var pause = false;
     // var engine = new Worker(options.stockfishjs || 'js/stockfish.js');
     var engine1 = new Worker('js/stockfish.js');
     var engine2 = new Worker('js/stockfish.js');
@@ -10,6 +17,8 @@ function engineGame(options) {
     var engine2Status = {};
     var depth1 = 20;
     var depth2 = 7;
+
+    var permanenciaUrl = 'http://localhost:3000';
 
     var displayScore = false;
 
@@ -21,8 +30,18 @@ function engineGame(options) {
     var winnerCount = { white: 0, black: 0 };
     var stalemate = 0;
     var draw = 0;
-    // do not pick up pieces if the game is over
-    // only pick up pieces for White
+    // var gameDescription = {
+    //     event: String,
+    //     site: String,
+    //     date: String,
+    //     round: String,
+    //     white: String,
+    //     black: String,
+    //     result: String
+    // };
+    var round = '';
+    var result = '';
+    
     var onDragStart = function(source, piece, position, orientation) {
         var re = playerColor == 'white' ? /^b/ : /^w/
             if (game.game_over() ||
@@ -31,8 +50,31 @@ function engineGame(options) {
             }
     };
 
+    function permanenciaMateInN(n,f,e) {
+        var url=permanenciaUrl+'/mateinn/add';
+        var data = JSON.stringify({
+            fen: f,
+            mateinn: n,
+            elo: e
+        });
+
+        var params = {
+            headers:{
+                'Access-Control-Allow-Origin':'*',
+                'Content-Type': 'application/json'
+            },
+            body: data,
+            method:"POST"
+        };
+
+        fetch(url,params)
+        .then(data => {return data.json()})
+        .then(res => {console.log(res)})
+        .catch(error=>console.log(error))
+    }
+
     function permanencia(bestmove,fen) {
-        var url='http://localhost:3000/bestmoves/add';
+        var url=permanenciaUrl+'/bestmoves/add';
         var data = JSON.stringify({
             fen: fen,
             bestmove: bestmove
@@ -55,10 +97,49 @@ function engineGame(options) {
     }
 
     function permanenciaPGN(pgn) {
-        var url='http://localhost:3000/pgn/add';
+        var white = '';
+        var black = '';
+        var currentdate = new Date(); 
+        var datetime = ((currentdate.getDate() < 10)?"0":"")+currentdate.getDate() + "/"
+                + ((currentdate.getMonth()+1 < 10)?"0":"")+(currentdate.getMonth()+1)  + "/" 
+                + currentdate.getFullYear() + " "  
+                + ((currentdate.getHours() < 10)?"0":"")+currentdate.getHours() + ":"  
+                + ((currentdate.getMinutes() < 10)?"0":"")+currentdate.getMinutes()
+
+        // gameDescription = {
+        //     event: String,
+        //     site: String,
+        //     date: String,
+        //     round: String,
+        //     white: String,
+        //     black: String,
+        //     result: String
+        // };
+
+        // gameDescription.event = '[Event "Stockfish"]';
+        // gameDescription.site = '[Site "Brazil"]';
+        // gameDescription.date = '[Date "'+datetime+'"]';
+        // gameDescription.round = '[Round "'+round+'"]';
+        // gameDescription.result = '[Result "'+result+'"]';
+
+        if (playerColor == 'white') {
+            // white = '[White "Stockfish '+(parseInt($('#skillLevel1').val())*73+1100)+'"]';
+            // black = '[Black "Stockfish '+(parseInt($('#skillLevel2').val())*73+1100)+'"]';
+            white = 'Stockfish '+(parseInt($('#skillLevel1').val())*73+1100);
+            black = 'Stockfish '+(parseInt($('#skillLevel2').val())*73+1100);
+        } else {
+            white = 'Stockfish '+(parseInt($('#skillLevel2').val())*73+1100);
+            black = 'Stockfish '+(parseInt($('#skillLevel1').val())*73+1100);
+        }
+
+        var url=permanenciaUrl+'/pgn/add';
         var data = JSON.stringify({
             pgn: pgn,
-            description: ''
+            // description: gameDescription.event+'\n'+gameDescription.site+'\n'+gameDescription.date+'\n'+gameDescription.round+'\n'+gameDescription.result+'\n'+gameDescription.white+'\n'+gameDescription.black
+            result: result,
+            white: white,
+            black: black,
+            date: datetime
         });
 
         var params = {
@@ -143,10 +224,10 @@ function engineGame(options) {
         var hours = Math.floor(min / 60);
         min -= hours * 60;
         var display = hours + ':' + ('0' + min).slice(-2) + ':' + ('0' + sec).slice(-2);
-        if(isRunning) {
-            display += sec & 1 ? ' <--' : ' <-';
-        }
-        $(id).text(display);
+        // if(isRunning) {
+        //     display += sec & 1 ? ' <' : ' <-';
+        // }
+        $(id).text((color == playerColor ? '['+engine1Status.score+'] ' : '['+engine2Status.score+'] ')+display);
     }
 
     function updateClock() {
@@ -190,6 +271,7 @@ function engineGame(options) {
     }
 
     function prepareMove() {
+        
         stopClock();
         $('#pgn').text(game.pgn());
         $('#fen').text(game.fen());
@@ -197,70 +279,88 @@ function engineGame(options) {
         updateClock();
         var turn = game.turn() == 'w' ? 'white' : 'black';
         if(!game.game_over()) {
-            if(turn != playerColor || turn == playerColor) {
-                var moves = '';
-                var history = game.history({verbose: true});
-                for(var i = 0; i < history.length; ++i) {
-                    var move = history[i];
-                    moves += ' ' + move.from + move.to + (move.promotion ? move.promotion : '');
-                }
+            var moves = '';
+            var history = game.history({verbose: true});
+            for(var i = 0; i < history.length; ++i) {
+                var move = history[i];
+                moves += ' ' + move.from + move.to + (move.promotion ? move.promotion : '');
+            }
+
+            if(turn == playerColor) {
                 // uciCmd('position startpos moves' + moves);
                 uciCmd1('position startpos moves' + moves);
-                uciCmd2('position startpos moves' + moves);
 
                 if(time.depth) {
                     // uciCmd('go depth ' + time.depth);
                     uciCmd1('go depth ' + time.depth);
-                    uciCmd2('go depth ' + time.depth);
                 } else if(time.nodes) {
                     // uciCmd('go nodes ' + time.nodes);
                     uciCmd1('go nodes ' + time.nodes);
-                    uciCmd2('go nodes ' + time.nodes);
                 } else {//if (depth1 && depth2) {
                     // uciCmd('go wtime ' + time.wtime + ' winc ' + time.winc + ' btime ' + time.btime + ' binc ' + time.binc);
                     // uciCmd1('go depth ' + depth1);
                     // uciCmd2('go depth ' + depth2);
-                    uciCmd1('go depth 15');
-                    uciCmd2('go depth 5');
+                    uciCmd1('go depth 10');
                 }
                 isEngineRunning = true;
+            } else {
+                uciCmd2('position startpos moves' + moves);
+
+                if(time.depth) {
+                    uciCmd2('go depth ' + time.depth);
+                } else if(time.nodes) {
+                    uciCmd2('go nodes ' + time.nodes);
+                } else {//if (depth1 && depth2) {
+                    uciCmd2('go depth 10');
+                }
+                isEngineRunning = true;
+
             }
             if(game.history().length >= 2 && !time.depth && !time.nodes) {
                 startClock();
             }
         } else {
+            round = game.fen().match(/\s(\d+)$/)[0]-1;
             if (turn == 'black' && game.in_checkmate()) {
+                result = '1-0';
                 winnerCount.white++;
                 $('#whiteCount').text('white: '+winnerCount.white);
             } else if (turn == 'white' && game.in_checkmate()) {
+                result = '0-1';
                 winnerCount.black++;
                 $('#blackCount').text('black: '+winnerCount.black);
             } else if (game.in_stalemate()) {
+                result = '½-½';
                 stalemate++;
                 $('#stalemate').text('stalemates: '+stalemate);
             } else if (game.in_draw()) {
+                result = '½-½';
+                draw++;
+                $('#draw').text('draws: '+draw);
+            } else {
                 draw++;
                 $('#draw').text('draws: '+draw);
             }
 
             permanenciaPGN(game.pgn());
         
-            var baseTime = parseFloat($('#timeBase').val()) * 60;
-            var inc = parseFloat($('#timeInc').val());
-            var skill1 = parseInt($('#skillLevel1').val());
-            var skill2 = parseInt($('#skillLevel2').val());
-            var depthLevel1 = parseInt($('#depthLevel1').val());
-            var depthLevel2 = parseInt($('#depthLevel2').val());
+            // var baseTime = parseFloat($('#timeBase').val()) * 60;
+            // var inc = parseFloat($('#timeInc').val());
+            // // var skill1 = parseInt($('#skillLevel1').val());
+            // var skill2 = parseInt($('#skillLevel2').val());
+            // var depthLevel1 = parseInt($('#depthLevel1').val());
+            // var depthLevel2 = parseInt($('#depthLevel2').val());
             
-            game.reset();
-            game.setTime(baseTime, inc);
-            game.setSkillLevel1(skill1);
-            game.setSkillLevel2(skill2);
-            game.setDepth1(depthLevel1);
-            game.setDepth2(depthLevel2);
-            game.setPlayerColor($('#color-white').hasClass('active') ? 'white' : 'black');
-            game.setDisplayScore($('#showScore').is(':checked'));
-            game.start();
+            // game.reset();
+            // game.setTime(baseTime, inc);
+            // // game.setSkillLevel1(skill1);
+            // // game.setSkillLevel2(skill2);
+            // // game.setDepth1(depthLevel1);
+            // // game.setDepth2(depthLevel2);
+            // game.setPlayerColor($('#color-white').hasClass('active') ? 'white' : 'black');
+            // game.setDisplayScore($('#showScore').is(':checked'));
+            // game.start();
+            this.newGame();
         }
     }
 
@@ -271,30 +371,34 @@ function engineGame(options) {
         } else if(line == 'readyok') {
             engine1Status.engineReady = true;
         } else {
-            var match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbk])?/);
+            var match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbkn])?/);
             var turn = game.turn() == 'w' ? 'white' : 'black';
+            // var mycolor = playerColor.substring(0, 1);
+            var mycolor = (playerColor == 'white' ? 'w' : 'b');
             
             if(turn == playerColor) {
                 if(match) {
-                    permanencia(match,game.fen());
+                    //permanencia(match,game.fen());
                     // $('#bestmove').text(match[0].slice(9,13));
                     $('#bestmove').text(match[0]);
                     isEngineRunning = false;
-                    game.move({from: match[1], to: match[2], promotion: match[3]});
-                    prepareMove();
+                    game.move({from: match[1], to: match[2], promotion: match[3]});                    
+                    pause ? null : prepareMove();
                 } else if(match = line.match(/^info .*\bdepth (\d+) .*\bnps (\d+)/)) {
                     engine1Status.search = 'Depth: ' + match[1] + ' Nps: ' + match[2];
                 }
                 if(match = line.match(/^info .*\bscore (\w+) (-?\d+)/)) {
-                    var score = parseInt(match[2]) * (game.turn() == 'w' ? 1 : -1);
+                    var score = parseInt(match[2]);// * (game.turn() == mycolor ? 1 : -1);
                     if(match[1] == 'cp') {
                         engine1Status.score = (score / 100.0).toFixed(2);
                     } else if(match[1] == 'mate') {
                         engine1Status.score = '#' + score;
+                        score > 0 ? permanenciaMateInN(score,game.fen(),(parseInt($('#skillLevel1').val()*73+1100))):null;
+                        
                     }
                     if(match = line.match(/\b(upper|lower)bound\b/)) {
-                        engine1Status.score = ((match[1] == 'upper') == (game.turn() == 'w') ? '<= ' : '>= ') + engine1Status.score
-                    }
+                        engine1Status.score = ((match[1] == 'upper') == (game.turn() == mycolor) ? '<= ' : '>= ') + engine1Status.score
+                    };
                 }
             }            
         }
@@ -309,32 +413,35 @@ function engineGame(options) {
             engine2Status.engineReady = true;
         } else {
             var match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbk])?/);
-            var turn = game.turn() == 'w' ? 'white' : 'black';
-            
+            var turn = (game.turn() == 'w' ? 'white' : 'black');
+            var mycolor = (playerColor == 'white' ? 'b' : 'w');
+
             if(turn != playerColor) {
                 if(match) {
                     isEngineRunning = false;
                     game.move({from: match[1], to: match[2], promotion: match[3]});
-                    prepareMove();
+                    pause ? null : prepareMove();
                 } else if(match = line.match(/^info .*\bdepth (\d+) .*\bnps (\d+)/)) {
                     engine2Status.search = 'Depth: ' + match[1] + ' Nps: ' + match[2];
                 }
+
                 if(match = line.match(/^info .*\bscore (\w+) (-?\d+)/)) {
-                    var score = parseInt(match[2]) * (game.turn() == 'w' ? 1 : -1);
+                    var score = parseInt(match[2]);// * (game.turn() != mycolor ? 1 : -1);
                     if(match[1] == 'cp') {
                         engine2Status.score = (score / 100.0).toFixed(2);
                     } else if(match[1] == 'mate') {
                         engine2Status.score = '#' + score;
+                        score > 0 ? permanenciaMateInN(score,game.fen(),(parseInt($('#skillLevel2').val()*73+1100))):null;
                     }
                     if(match = line.match(/\b(upper|lower)bound\b/)) {
-                        engine2Status.score = ((match[1] == 'upper') == (game.turn() == 'w') ? '<= ' : '>= ') + engine2Status.score
+                        engine2Status.score = ((match[1] == 'upper') == (game.turn() != mycolor) ? '<= ' : '>= ') + engine2Status.score
                     }
                 }
             }            
         }
         displayStatus2();
     };
-
+    
     var onDrop = function(source, target) {
         // see if the move is legal
         var move = game.move({
@@ -392,6 +499,10 @@ function engineGame(options) {
     board = new ChessBoard('board', cfg);
 
     return {
+        pause() {
+            pause = pause ? false : true;
+            pause ? stopClock() : prepareMove();
+        },
         reset: function() {
             game.reset();
             // uciCmd('setoption name Contempt Factor value 0');
@@ -405,6 +516,11 @@ function engineGame(options) {
             uciCmd2('setoption name Contempt Factor value 0');
             uciCmd2('setoption name Skill Level value 7');
             uciCmd2('setoption name Aggressiveness value 100');
+
+            // engine1Status = '';
+            // engine2Status = '';
+            // engine1Status.score = '';
+            // engine2Status.score = '';
         },
         loadPgn: function(pgn) { game.load_pgn(pgn); },
         setPlayerColor: function(color) {

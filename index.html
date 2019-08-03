@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="row">
-      <div class="col-md-10">
+      <div class="col-md-12">
         &nbsp;
       </div>
     </div>
@@ -21,12 +21,12 @@
         <div class="col-md-1">
             &nbsp;
           </div>
-      <div class="col-md-9">
-          <b>SCOREBOARD: </b>
+      <div class="col-md-11 scoreboard-title">
+          <b>SCOREBOARD</b>
       </div>      
     </div>
 
-    <div class="row">
+    <div class="row scoreboard">
       <div class="col-md-1">
         &nbsp;
       </div>
@@ -37,18 +37,18 @@
           <div id="blackCount">black: 0</div>
       </div>
       <div class="col-md-1">
-          <div id="blackCount">draw: 0</div>
+          <div id="draw">draw: 0</div>
       </div>
       <div class="col-md-1">
           <div id="stalemate">stalemate: 0</div>
       </div>
-      <div class="col-md-5">
+      <div class="col-md-7">
           &nbsp;
         </div>
     </div>
 
     <div class="row">
-      <div class="col-md-10">
+      <div class="col-md-12">
         <b>&nbsp;</b>
       </div>      
     </div>
@@ -57,15 +57,15 @@
       <div class="col-md-1">
         &nbsp;
       </div>
-      <div class="col-md-4">
+      <div class="col-md-5">
         <span class="h3" id="time1">0:05:00</span>
-        <div id="board" style="width: 400px"></div>
+        <div id="board" style="width: 600px"></div>
         <span class="h3" id="time2">0:05:00</span>
         <hr>
         <div id="engine1Status">...</div>
         <div id="engine2Status">...</div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-5 pgn">
         <h3>PGN:</h3>
         <div id="pgn"></div>
         <h3>FEN:</h3>
@@ -90,30 +90,30 @@
           <div class="form-group">
             <label for="skillLevel1" class="control-label col-xs-4 col-sm-6 col-md-4">Skill Level (0-20)</label>
             <div class="col-xs-4 col-sm-6 col-md-4">
-              <input type="number" class="form-control" id="skillLevel1" value="20"></input>
+              <input type="number" class="form-control" id="skillLevel1" value="5"></input>
             </div>
           </div>
           <div class="form-group">
               <label for="depthLevel1" class="control-label col-xs-4 col-sm-6 col-md-4">Depth Level (0-20)</label>
               <div class="col-xs-4 col-sm-6 col-md-4">
-                <input type="number" class="form-control" id="depthLevel1" value="15" disabled="true"></input>
+                <input type="number" class="form-control" id="depthLevel1" value="10" disabled="true"></input>
               </div>
           </div>
           <h3>Engine [2]:</h3>
           <div class="form-group">
             <label for="skillLevel2" class="control-label col-xs-4 col-sm-6 col-md-4">Skill Level (0-20)</label>
             <div class="col-xs-4 col-sm-6 col-md-4">
-              <input type="number" class="form-control" id="skillLevel2" value="7"></input>
+              <input type="number" class="form-control" id="skillLevel2" value="5"></input>
             </div>
           </div>
           <div class="form-group">
               <label for="depthLevel2" class="control-label col-xs-4 col-sm-6 col-md-4">Depth Level (0-20)</label>
               <div class="col-xs-4 col-sm-6 col-md-4">
-                <input type="number" class="form-control" id="depthLevel2" value="5" disabled="true"></input>
+                <input type="number" class="form-control" id="depthLevel2" value="10" disabled="true"></input>
               </div>
             </div>
           <div class="form-group">
-            <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4">Recording</label>
+            <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4">Orientation</label>
             <div class="col-xs-4 col-sm-6 col-md-4">
               <div class="btn-group" data-toggle="buttons">
                 <label class="btn btn-primary active" id="color-white"><input type="radio" name="color">White</label>
@@ -121,16 +121,22 @@
               </div>
             </div>
           </div>
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label for="showScore" class="control-label col-xs-4 col-sm-6 col-md-4">Show score</label>
             <div class="col-xs-4 col-sm-6 col-md-4">
               <input type="checkbox" class="form-control" id="showScore" checked></input>
+            </div>
+          </div> -->
+          <div class="form-group">
+            <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4"></label>
+            <div class="col-xs-4 col-sm-6 col-md-4">
+              <button type="button" class="btn btn-primary" onclick="newGame()">New Game</button>
             </div>
           </div>
           <div class="form-group">
             <label for="color" class="control-label col-xs-4 col-sm-6 col-md-4"></label>
             <div class="col-xs-4 col-sm-6 col-md-4">
-              <button type="button" class="btn btn-primary" onclick="newGame()">New Game</button>
+              <button id="btn-pause" type="button" class="btn btn-primary" onclick="pause()">Pause / Despause</button>
             </div>
           </div>
         </form>
@@ -138,7 +144,7 @@
         <small>This chess engine has been tested and found working in both Firefox 25 and Chrome 31. It runs about twice as fast in Firefox as in Chrome, so for best performance use Firefox. The engine has also been tested in Safari 6 where it does not run. It might run in a later version of this browser, though. It has not been tested in the Internet Explorer, but it should in theory run in IE versions >= 10.</small> -->
       </div>
       <div class="col-md-1">
-          &nbsp;
+        &nbsp;
       </div>
     </div>
     <script src="enginegame.js"></script>
@@ -165,6 +171,11 @@
       }
 
       newGame();
+
+      function pause() {
+        game.pause();
+        //$('#btn-pause').innerHTML == 'pause' ? $('#btn-pause').innerHTML = 'despause' : $('#btn-pause').innerHTML ='pause';
+      }
     </script>
   </body>
 </html>

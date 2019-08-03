@@ -4,6 +4,9 @@ var connect = require('connect'),
     serveStatic = require('serve-static');
 
 var app = connect();
+var port = 8080;
 
 app.use(serveStatic(__dirname));
-app.listen(8080);
+app.listen(port, () => {
+    console.log("Server is listening on port " + port);
+});
