@@ -1,6 +1,6 @@
 # Stockfish 1x1
  
-[Stockfish 1x1](https://www.youtube.com/watch?v=odQZWNiWH5A)  
+[](https://i9.ytimg.com/vi/odQZWNiWH5A/mq1.jpg?sqp=CLz9luoF&rs=AOn4CLBh-QVoAzF9m3sdP1NgIQV2jfVKKA)(https://www.youtube.com/watch?v=odQZWNiWH5A)  
 
 ### **Objetivo**  
 Povoar uma base [mongodb](https://www.mongodb.com) com partidas de Xadrez geradas a partir do confronto de duas engines [stockfish](https://stockfishchess.org/)  
